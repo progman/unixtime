@@ -1,0 +1,8 @@
+fix this? unixtime --to '%Y.%m.%d %H:%M:%S' '2012.11.04-15.41.08'
+1352043668
+
+fix this? unixtime --to '%Y.%m.%d %H:%M:%S' '2012.11.04-15.41.0'
+ERROR: invalid input
+
+fix this? unixtime --to '%Y.%m.%d %H:%M:%S' '2012.11.04-15.41.08a'
+1352043668

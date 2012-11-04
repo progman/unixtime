@@ -1,0 +1,6 @@
+unixtime encoder/decoder
+
+
+1) Get this : git clone git://github.com/progman/unixtime
+2) Use this : unixtime --to '%Y-%m-%d %H:%M:%S' '2012-11-04 15:41:08'
+3) Enjoy!
