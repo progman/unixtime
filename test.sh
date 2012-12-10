@@ -22,7 +22,7 @@ fi
 
 
 X='2012.11.04-15.41.08';
-Y=$(./bin/unixtime --to '%Y.%m.%d %H:%M:%S' "${X}");
+Y=$(./bin/unixtime --to '%Y.%m.%d-%H.%M.%S' "${X}");
 Z=$(./bin/unixtime --from '%Y.%m.%d-%H.%M.%S' "${Y}");
 
 if [ "${X}" != "${Z}" ];
