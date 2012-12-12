@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-// 0.0.4
+// 0.0.5
 // Alexey Potehin http://www.gnuplanet.ru/doc/cv
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 #include <stdio.h>
@@ -13,6 +13,8 @@
 namespace global
 {
 	bool flag_debug = false;
+	bool flag_stdin = false;
+	char line_buf[4096];
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // test is uint ?
@@ -101,9 +103,9 @@ bool get_val(const char* p, const char* p_end, size_t size, int& i)
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // encode string to unixtime
-int unixtime_encode(const char* format, const char* data, time_t* time)
+int unixtime_encode(const char* format, const char* value, time_t* time)
 {
-	if ((format == NULL) || (data == NULL))
+	if ((format == NULL) || (value == NULL))
 	{
 		*time = 0;
 		return -1;
@@ -113,8 +115,8 @@ int unixtime_encode(const char* format, const char* data, time_t* time)
 	const char* format_end = format;
 	while (*format_end != 0) format_end++;
 
-	const char* data_end   = data;
-	while (*data_end != 0) data_end++;
+	const char* value_end  = value;
+	while (*value_end != 0) value_end++;
 
 
 	bool flag_year  = false;
@@ -146,95 +148,95 @@ int unixtime_encode(const char* format, const char* data, time_t* time)
 			{
 				case 'Y':
 				{
-					if (get_val(data, data_end, 4, year) == false)
+					if (get_val(value, value_end, 4, year) == false)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_year = true;
-					data += 4;
+					value += 4;
 					break;
 				}
 				case 'm':
 				{
-					if (get_val(data, data_end, 2, month) == false)
+					if (get_val(value, value_end, 2, month) == false)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_month = true;
-					data += 2;
+					value += 2;
 					break;
 				}
 				case 'd':
 				{
-					if (get_val(data, data_end, 2, day) == false)
+					if (get_val(value, value_end, 2, day) == false)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_day = true;
-					data += 2;
+					value += 2;
 					break;
 				}
 				case 'H':
 				{
-					if (get_val(data, data_end, 2, hour) == false)
+					if (get_val(value, value_end, 2, hour) == false)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_hour = true;
-					data += 2;
+					value += 2;
 					break;
 				}
 				case 'M':
 				{
-					if (get_val(data, data_end, 2, min) == false)
+					if (get_val(value, value_end, 2, min) == false)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_min = true;
-					data += 2;
+					value += 2;
 					break;
 				}
 				case 'S':
 				{
-					if (get_val(data, data_end, 2, sec) == false)
+					if (get_val(value, value_end, 2, sec) == false)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_sec = true;
-					data += 2;
+					value += 2;
 					break;
 				}
 				case '?':
 				{
-					data++;
+					value++;
 					break;
 				}
 				default:
 				{
-					if (*data != *format)
+					if (*value != *format)
 					{
 						*time = 0;
 						return -1;
 					}
-					data++;
+					value++;
 					break;
 				}
 			}
 		}
 		else
 		{
-			if (*data != *format)
+			if (*value != *format)
 			{
 				*time = 0;
 				return -1;
 			}
-			data++;
+			value++;
 		}
 		format++;
 	}
@@ -285,24 +287,24 @@ int unixtime_encode(const char* format, const char* data, time_t* time)
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // decode unixtime to string
-int unixtime_decode(const char* format, const char* data, std::string& str)
+int unixtime_decode(const char* format, const char* value, std::string& str)
 {
 	time_t time = 0;
 	struct tm result;
 
 
-	if (data == NULL)
+	if (value == NULL)
 	{
 		return -1;
 	}
 
-	if (is_uint(data) == false)
+	if (is_uint(value) == false)
 	{
 		return -1;
 	}
 
 
-	time = atoi(data);
+	time = atoi(value);
 	gmtime_r(&time, &result);
 
 
@@ -388,11 +390,69 @@ int unixtime_decode(const char* format, const char* data, std::string& str)
 	return 0;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+// get line buf from stdin and convert and check it
+int get_line_buf(char *line_buf, size_t size)
+{
+// read from stdin
+	char *p_line = fgets(line_buf, size, stdin);
+	if (p_line == NULL)
+	{
+		return -1;
+	}
+
+// search '\n' and change to 0
+	int flag_found = 0;
+	char *p_line2 = p_line;
+	for (;;)
+	{
+		if (*p_line2 == 0) break;
+		if (*p_line2 == '\n')
+		{
+			*p_line2 = 0;
+			flag_found = 1;
+			break;
+		}
+		p_line2++;
+	}
+	if (flag_found == 0)
+	{
+		return -1; // line incomplete
+	}
+
+//	if (*p_line == 0)
+//	{
+//		return -1; // line empty
+//	}
+
+
+	return 0;
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // view help
 void help(const char* filename)
 {
-	printf ("unixtime version 0.0.4\n");
-	printf ("example: %s --to|--from '%%Y-%%m-%%d %%H:%%M:%%S' '2012-11-04 15:41:08'\n", filename);
+	printf ("%s\t(%s)\n", PROG_FULL_NAME, PROG_URL);
+	printf ("unixtime encoder/decoder from command line, or standard input\n");
+	printf ("\n");
+
+	printf ("example: %s --to '%%Y-%%m-%%d %%H:%%M:%%S' '2012-11-04 15:41:08'\n", filename);
+	printf ("\n");
+	printf ("Usage: unixtime [OPTION]\n");
+	printf ("Options:\n");
+	printf ("    --to   FORMAT VALUE    encode to unixtime\n");
+	printf ("    --from FORMAT VALUE    decode from unixtime\n");
+
+	printf ("FORMAT controls body VALUE. Interpreted sequences are:\n");
+	printf ("    %%%%     a literal %%\n");
+	printf ("    %%?     any literal\n");
+	printf ("    %%Y     year\n");
+	printf ("    %%m     month (01..12)\n");
+	printf ("    %%d     day of month (e.g., 01)\n");
+	printf ("    %%H     hour (00..23)\n");
+	printf ("    %%M     minute (00..59)\n");
+	printf ("    %%S     second (00..60)\n");
+
+	printf ("When VALUE is - or --, read standard input.\n");
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // general function
@@ -401,53 +461,79 @@ int main(int argc, char* argv[])
 	if (argc != 4)
 	{
 		help(argv[0]);
-		exit(1);
-	}
-
-
-	if
-	(
-		(strcmp(argv[1], "--to")   != 0) &&
-		(strcmp(argv[1], "--from") != 0)
-	)
-	{
-		help(argv[0]);
-		exit(1);
+		return 1;
 	}
 
 
 	global::flag_debug = env2bool("FLAG_DEBUG");
 
 
+	if
+	(
+		(strcmp(argv[3], "-")  == 0) ||
+		(strcmp(argv[3], "--") == 0)
+	)
+	{
+		global::flag_stdin = true;
+	}
+
+
 	if (strcmp(argv[1], "--to") == 0)
 	{
-		time_t time;
-		int rc = unixtime_encode(argv[2], argv[3], &time);
-		if (rc == -1)
+		const char* value = argv[3];
+		int result = 0;
+		for(;;)
 		{
-//			printf ("ERROR: invalid input\n");
+			if (global::flag_stdin == true)
+			{
+				if (get_line_buf(global::line_buf, sizeof(global::line_buf)) == -1) break;
+				value = global::line_buf;
+			}
+
+			time_t time;
+			int rc = unixtime_encode(argv[2], value, &time);
+			if (rc == -1)
+			{
+				result = 1;
+			}
 			printf ("%lu\n", time);
-			return 1;
+
+			if (global::flag_stdin == false) break;
 		}
-		printf ("%lu\n", time);
+		return result;
 	}
 
 
 	if (strcmp(argv[1], "--from") == 0)
 	{
-		std::string str;
-		int rc = unixtime_decode(argv[2], argv[3], str);
-		if (rc == -1)
+		const char* value = argv[3];
+		int result = 0;
+		for(;;)
 		{
-//			printf ("ERROR: invalid input\n");
-			unixtime_decode(argv[2], "0", str);
+			if (global::flag_stdin == true)
+			{
+				if (get_line_buf(global::line_buf, sizeof(global::line_buf)) == -1) break;
+				value = global::line_buf;
+			}
+
+			std::string str;
+			int rc = unixtime_decode(argv[2], value, str);
+			if (rc == -1)
+			{
+				result = 1;
+				unixtime_decode(argv[2], "0", str);
+			}
 			printf ("%s\n", str.c_str());
-			return 1;
+
+			if (global::flag_stdin == false) break;
 		}
-		printf ("%s\n", str.c_str());
+		return result;
 	}
 
 
-	return 0;
+	help(argv[0]);
+
+
+	return 1;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
