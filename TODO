@@ -1,0 +1,4 @@
+Add:
+
+%p     locale's equivalent of either AM or PM; blank if not known
+%I     hour (01..12)
