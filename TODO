@@ -1,4 +1,4 @@
 Add:
 
-%p     locale's equivalent of either AM or PM; blank if not known
-%I     hour (01..12)
+%k     hour, space padded ( 0..23); same as %_H
+%l     hour, space padded ( 1..12); same as %_I

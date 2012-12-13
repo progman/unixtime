@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-// 0.0.5
+// 0.0.6
 // Alexey Potehin http://www.gnuplanet.ru/doc/cv
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 #include <stdio.h>
@@ -76,7 +76,7 @@ bool env2bool(const char* name, bool value_default = false)
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // get val from string area
-bool get_val(const char* p, const char* p_end, size_t size, int& i)
+bool get_val(const char* p, const char* p_end, size_t size, int& i, bool flag_am_pm = false)
 {
 	std::string str;
 
@@ -92,14 +92,34 @@ bool get_val(const char* p, const char* p_end, size_t size, int& i)
 		str += *p;
 		p++;
 	}
-	if (is_uint(str) == false)
+
+	if (flag_am_pm == false)
 	{
-		return false;
+		if (is_uint(str) == false)
+		{
+			return false;
+		}
+
+		i = atoi(str.c_str());
+
+		return true;
 	}
 
-	i = atoi(str.c_str());
+	std::transform (str.begin(), str.end(), str.begin(), toupper);
 
-	return true;
+	if (str == "AM")
+	{
+		i = 0;
+		return true;
+	}
+
+	if (str == "PM")
+	{
+		i = 1;
+		return true;
+	}
+
+	return false;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // encode string to unixtime
@@ -125,6 +145,7 @@ int unixtime_encode(const char* format, const char* value, time_t* time)
 	bool flag_hour  = false;
 	bool flag_min   = false;
 	bool flag_sec   = false;
+	bool flag_am_pm = false;
 
 
 	int year  = 0;
@@ -133,6 +154,7 @@ int unixtime_encode(const char* format, const char* value, time_t* time)
 	int hour  = 0;
 	int min   = 0;
 	int sec   = 0;
+	int am_pm = 0;
 
 
 	for(;;)
@@ -179,6 +201,54 @@ int unixtime_encode(const char* format, const char* value, time_t* time)
 					value += 2;
 					break;
 				}
+				case 'p':
+				{
+					if (get_val(value, value_end, 2, am_pm, true) == false)
+					{
+						*time = 0;
+						return -1;
+					}
+
+					if (flag_hour != false)
+					{
+						if (hour > 12)
+						{
+							*time = 0;
+							return -1;
+						}
+						if (am_pm != 0)
+						{
+							hour += 12;
+						}
+					}
+
+					flag_am_pm = true;
+					value += 2;
+					break;
+				}
+				case 'I':
+				{
+					if (get_val(value, value_end, 2, hour) == false)
+					{
+						*time = 0;
+						return -1;
+					}
+
+					if (hour > 12)
+					{
+						*time = 0;
+						return -1;
+					}
+
+					if ((flag_am_pm != false) && (am_pm != 0))
+					{
+						hour += 12;
+					}
+
+					flag_hour = true;
+					value += 2;
+					break;
+				}
 				case 'H':
 				{
 					if (get_val(value, value_end, 2, hour) == false)
@@ -186,6 +256,20 @@ int unixtime_encode(const char* format, const char* value, time_t* time)
 						*time = 0;
 						return -1;
 					}
+
+					if (flag_am_pm != false)
+					{
+						if (hour > 12)
+						{
+							*time = 0;
+							return -1;
+						}
+						if (am_pm != 0)
+						{
+							hour += 12;
+						}
+					}
+
 					flag_hour = true;
 					value += 2;
 					break;
@@ -355,6 +439,26 @@ int unixtime_decode(const char* format, const char* value, std::string& str)
 					str += day;
 					break;
 				}
+				case 'p':
+				{
+					if (result.tm_hour > 12)
+					{
+						str += "PM";
+						break;
+					}
+					str += "AM";
+					break;
+				}
+				case 'I':
+				{
+					if (result.tm_hour > 12)
+					{
+						hour = sint2str(result.tm_hour - 12);
+					}
+					if (hour.size() == 1) str += '0';
+					str += hour;
+					break;
+				}
 				case 'H':
 				{
 					if (hour.size() == 1) str += '0';
@@ -448,6 +552,8 @@ void help(const char* filename)
 	printf ("    %%Y     year\n");
 	printf ("    %%m     month (01..12)\n");
 	printf ("    %%d     day of month (e.g., 01)\n");
+	printf ("    %%p     hour modifier (AM or PM) for %%I\n");
+	printf ("    %%I     hour (00..12)\n");
 	printf ("    %%H     hour (00..23)\n");
 	printf ("    %%M     minute (00..59)\n");
 	printf ("    %%S     second (00..60)\n");
