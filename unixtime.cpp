@@ -87,7 +87,7 @@ bool get_val(const char* p, const char* p_end, size_t size, int& i, bool flag_am
 
 	str.clear();
 
-	for(size_t i=0; i < size; i++)
+	for (size_t i=0; i < size; i++)
 	{
 		str += *p;
 		p++;
@@ -105,7 +105,7 @@ bool get_val(const char* p, const char* p_end, size_t size, int& i, bool flag_am
 		return true;
 	}
 
-	std::transform (str.begin(), str.end(), str.begin(), toupper);
+	std::transform(str.begin(), str.end(), str.begin(), toupper);
 
 	if (str == "AM")
 	{
@@ -157,7 +157,7 @@ int unixtime_encode(const char* format, const char* value, time_t* time)
 	int am_pm = 0;
 
 
-	for(;;)
+	for (;;)
 	{
 		if (*format == 0) break;
 
@@ -166,7 +166,7 @@ int unixtime_encode(const char* format, const char* value, time_t* time)
 			format++;
 			if (*format == 0) break;
 
-			switch(*format)
+			switch (*format)
 			{
 				case 'Y':
 				{
@@ -328,12 +328,12 @@ int unixtime_encode(const char* format, const char* value, time_t* time)
 
 	if (global::flag_debug != false)
 	{
-		printf ("year  = \"%u\"\n", year);
-		printf ("month = \"%u\"\n", month);
-		printf ("day   = \"%u\"\n", day);
-		printf ("hour  = \"%u\"\n", hour);
-		printf ("min   = \"%u\"\n", min);
-		printf ("sec   = \"%u\"\n", sec);
+		printf("year  = \"%u\"\n", year);
+		printf("month = \"%u\"\n", month);
+		printf("day   = \"%u\"\n", day);
+		printf("hour  = \"%u\"\n", hour);
+		printf("min   = \"%u\"\n", min);
+		printf("sec   = \"%u\"\n", sec);
 	}
 
 
@@ -402,16 +402,16 @@ int unixtime_decode(const char* format, const char* value, std::string& str)
 
 	if (global::flag_debug != false)
 	{
-		printf ("year  = \"%s\"\n", year.c_str());
-		printf ("month = \"%s\"\n", month.c_str());
-		printf ("day   = \"%s\"\n", day.c_str());
-		printf ("hour  = \"%s\"\n", hour.c_str());
-		printf ("min   = \"%s\"\n", min.c_str());
-		printf ("sec   = \"%s\"\n", sec.c_str());
+		printf("year  = \"%s\"\n", year.c_str());
+		printf("month = \"%s\"\n", month.c_str());
+		printf("day   = \"%s\"\n", day.c_str());
+		printf("hour  = \"%s\"\n", hour.c_str());
+		printf("min   = \"%s\"\n", min.c_str());
+		printf("sec   = \"%s\"\n", sec.c_str());
 	}
 
 
-	for(;;)
+	for (;;)
 	{
 		if (*format == 0) break;
 
@@ -420,7 +420,7 @@ int unixtime_decode(const char* format, const char* value, std::string& str)
 			format++;
 			if (*format == 0) break;
 
-			switch(*format)
+			switch (*format)
 			{
 				case 'Y':
 				{
@@ -535,30 +535,30 @@ int get_line_buf(char *line_buf, size_t size)
 // view help
 void help(const char* filename)
 {
-	printf ("%s\t(%s)\n", PROG_FULL_NAME, PROG_URL);
-	printf ("unixtime encoder/decoder from command line, or standard input\n");
-	printf ("\n");
+	printf("%s\t(%s)\n", PROG_FULL_NAME, PROG_URL);
+	printf("unixtime encoder/decoder from command line, or standard input\n");
+	printf("\n");
 
-	printf ("example: %s --to '%%Y-%%m-%%d %%H:%%M:%%S' '2012-11-04 15:41:08'\n", filename);
-	printf ("\n");
-	printf ("Usage: unixtime [OPTION]\n");
-	printf ("Options:\n");
-	printf ("    --to   FORMAT VALUE    encode to unixtime\n");
-	printf ("    --from FORMAT VALUE    decode from unixtime\n");
+	printf("example: %s --to '%%Y-%%m-%%d %%H:%%M:%%S' '2012-11-04 15:41:08'\n", filename);
+	printf("\n");
+	printf("Usage: unixtime [OPTION]\n");
+	printf("Options:\n");
+	printf("    --to   FORMAT VALUE    encode to unixtime\n");
+	printf("    --from FORMAT VALUE    decode from unixtime\n");
 
-	printf ("FORMAT controls body VALUE. Interpreted sequences are:\n");
-	printf ("    %%%%     a literal %%\n");
-	printf ("    %%?     any literal\n");
-	printf ("    %%Y     year\n");
-	printf ("    %%m     month (01..12)\n");
-	printf ("    %%d     day of month (e.g., 01)\n");
-	printf ("    %%p     hour modifier (AM or PM) for %%I\n");
-	printf ("    %%I     hour (00..12)\n");
-	printf ("    %%H     hour (00..23)\n");
-	printf ("    %%M     minute (00..59)\n");
-	printf ("    %%S     second (00..60)\n");
+	printf("FORMAT controls body VALUE. Interpreted sequences are:\n");
+	printf("    %%%%     a literal %%\n");
+	printf("    %%?     any literal\n");
+	printf("    %%Y     year\n");
+	printf("    %%m     month (01..12)\n");
+	printf("    %%d     day of month (e.g., 01)\n");
+	printf("    %%p     hour modifier (AM or PM) for %%I\n");
+	printf("    %%I     hour (00..12)\n");
+	printf("    %%H     hour (00..23)\n");
+	printf("    %%M     minute (00..59)\n");
+	printf("    %%S     second (00..60)\n");
 
-	printf ("When VALUE is - or --, read standard input.\n");
+	printf("When VALUE is - or --, read standard input.\n");
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // general function
@@ -588,7 +588,7 @@ int main(int argc, char* argv[])
 	{
 		const char* value = argv[3];
 		int result = 0;
-		for(;;)
+		for (;;)
 		{
 			if (global::flag_stdin == true)
 			{
@@ -602,7 +602,7 @@ int main(int argc, char* argv[])
 			{
 				result = 1;
 			}
-			printf ("%lu\n", time);
+			printf("%lu\n", time);
 
 			if (global::flag_stdin == false) break;
 		}
@@ -614,7 +614,7 @@ int main(int argc, char* argv[])
 	{
 		const char* value = argv[3];
 		int result = 0;
-		for(;;)
+		for (;;)
 		{
 			if (global::flag_stdin == true)
 			{
@@ -629,7 +629,7 @@ int main(int argc, char* argv[])
 				result = 1;
 				unixtime_decode(argv[2], "0", str);
 			}
-			printf ("%s\n", str.c_str());
+			printf("%s\n", str.c_str());
 
 			if (global::flag_stdin == false) break;
 		}
