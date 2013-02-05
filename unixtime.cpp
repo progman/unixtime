@@ -20,16 +20,18 @@ namespace global
 // test is uint ?
 bool is_uint(const std::string& str)
 {
+	const char *p = str.c_str();
 	for (size_t i=0; i < str.size(); i++)
 	{
 		if
 		(
-			(str[i] < '0') ||
-			(str[i] > '9')
+			(*p < '0') ||
+			(*p > '9')
 		)
 		{
 			return false;
 		}
+		p++;
 	}
 
 	return true;
@@ -53,7 +55,8 @@ bool str2bool(const std::string& str)
 	if
 	(
 		(tmp == "true") ||
-		(tmp == "on") ||
+		(tmp == "t")    ||
+		(tmp == "on")   ||
 		(tmp == "1")
 	)
 	{
