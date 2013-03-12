@@ -150,7 +150,7 @@ then
 fi
 
 
-CHECK_PROG_LIST='awk cat echo md5sum mktemp rm tail which';
+CHECK_PROG_LIST='awk cat echo md5sum mktemp rm tail';
 check_prog;
 
 
