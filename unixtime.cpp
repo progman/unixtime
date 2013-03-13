@@ -8,6 +8,7 @@
 #include <string>
 #include <string.h>
 #include <algorithm>
+#include "submodule/lib_cpp/lib_cpp.h"
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // global vars
 namespace global
@@ -15,67 +16,6 @@ namespace global
 	bool flag_debug = false;
 	bool flag_stdin = false;
 	char line_buf[4096];
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-// test is uint ?
-bool is_uint(const std::string& str)
-{
-	const char *p = str.c_str();
-	for (size_t i=0; i < str.size(); i++)
-	{
-		if
-		(
-			(*p < '0') ||
-			(*p > '9')
-		)
-		{
-			return false;
-		}
-		p++;
-	}
-
-	return true;
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-// convert int to string
-std::string sint2str(int value)
-{
-	char buf[128];
-	sprintf(buf, "%d", value);
-
-	return std::string(buf);
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-// convert string to bool
-bool str2bool(const std::string& str)
-{
-	std::string tmp = str;
-	std::transform(str.begin(), str.end(), tmp.begin(), tolower);
-
-	if
-	(
-		(tmp == "true") ||
-		(tmp == "t")    ||
-		(tmp == "on")   ||
-		(tmp == "1")
-	)
-	{
-		return true;
-	}
-
-	return false;
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-// get env var and convert to bool
-bool env2bool(const char* name, bool value_default = false)
-{
-	char* p = getenv(name);
-	if (p == NULL)
-	{
-		return value_default;
-	}
-
-	return str2bool(p);
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // get val from string area
@@ -98,7 +38,7 @@ bool get_val(const char* p, const char* p_end, size_t size, int& i, bool flag_am
 
 	if (flag_am_pm == false)
 	{
-		if (is_uint(str) == false)
+		if (lib_cpp::is_uint(str) == false)
 		{
 			return false;
 		}
@@ -385,7 +325,7 @@ int unixtime_decode(const char* format, const char* value, std::string& str)
 		return -1;
 	}
 
-	if (is_uint(value) == false)
+	if (lib_cpp::is_uint(value) == false)
 	{
 		return -1;
 	}
@@ -395,12 +335,12 @@ int unixtime_decode(const char* format, const char* value, std::string& str)
 	gmtime_r(&time, &result);
 
 
-	std::string year  = sint2str(result.tm_year + 1900);
-	std::string month = sint2str(result.tm_mon + 1);
-	std::string day   = sint2str(result.tm_mday);
-	std::string hour  = sint2str(result.tm_hour);
-	std::string min   = sint2str(result.tm_min);
-	std::string sec   = sint2str(result.tm_sec);
+	std::string year  = lib_cpp::sint2str(result.tm_year + 1900);
+	std::string month = lib_cpp::sint2str(result.tm_mon + 1);
+	std::string day   = lib_cpp::sint2str(result.tm_mday);
+	std::string hour  = lib_cpp::sint2str(result.tm_hour);
+	std::string min   = lib_cpp::sint2str(result.tm_min);
+	std::string sec   = lib_cpp::sint2str(result.tm_sec);
 
 
 	if (global::flag_debug != false)
@@ -456,7 +396,7 @@ int unixtime_decode(const char* format, const char* value, std::string& str)
 				{
 					if (result.tm_hour > 12)
 					{
-						hour = sint2str(result.tm_hour - 12);
+						hour = lib_cpp::sint2str(result.tm_hour - 12);
 					}
 					if (hour.size() == 1) str += '0';
 					str += hour;
@@ -574,7 +514,7 @@ int main(int argc, char* argv[])
 	}
 
 
-	global::flag_debug = env2bool("FLAG_DEBUG");
+	global::flag_debug = lib_cpp::env2bool("FLAG_DEBUG");
 
 
 	if
