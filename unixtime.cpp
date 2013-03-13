@@ -38,7 +38,7 @@ bool get_val(const char* p, const char* p_end, size_t size, int& i, bool flag_am
 
 	if (flag_am_pm == false)
 	{
-		if (lib_cpp::is_uint(str) == false)
+		if (lib_cpp::is_udec(str) == false)
 		{
 			return false;
 		}
@@ -325,7 +325,7 @@ int unixtime_decode(const char* format, const char* value, std::string& str)
 		return -1;
 	}
 
-	if (lib_cpp::is_uint(value) == false)
+	if (lib_cpp::is_udec(value) == false)
 	{
 		return -1;
 	}
