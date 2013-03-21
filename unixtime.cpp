@@ -19,7 +19,7 @@ namespace global
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // get val from string area
-bool get_val(const char* p, const char* p_end, size_t size, int& i, bool flag_am_pm = false)
+bool get_val(const char *p, const char *p_end, size_t size, int &i, bool flag_am_pm = false)
 {
 	std::string str;
 
@@ -66,7 +66,7 @@ bool get_val(const char* p, const char* p_end, size_t size, int& i, bool flag_am
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // encode string to unixtime
-int unixtime_encode(const char* format, const char* value, time_t* time)
+int unixtime_encode(const char *format, const char *value, time_t *time)
 {
 	if ((format == NULL) || (value == NULL))
 	{
@@ -75,10 +75,10 @@ int unixtime_encode(const char* format, const char* value, time_t* time)
 	}
 
 
-	const char* format_end = format;
+	const char *format_end = format;
 	while (*format_end != 0) format_end++;
 
-	const char* value_end  = value;
+	const char *value_end  = value;
 	while (*value_end != 0) value_end++;
 
 
@@ -314,7 +314,7 @@ int unixtime_encode(const char* format, const char* value, time_t* time)
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // decode unixtime to string
-int unixtime_decode(const char* format, const char* value, std::string& str)
+int unixtime_decode(const char *format, const char *value, std::string &str)
 {
 	time_t time = 0;
 	struct tm result;
@@ -476,7 +476,7 @@ int get_line_buf(char *line_buf, size_t size)
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // view help
-void help(const char* filename)
+void help(const char *filename)
 {
 	printf("%s\t(%s)\n", PROG_FULL_NAME, PROG_URL);
 	printf("unixtime encoder/decoder from command line, or standard input\n");
@@ -505,7 +505,7 @@ void help(const char* filename)
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // general function
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	if (argc != 4)
 	{
@@ -529,7 +529,7 @@ int main(int argc, char* argv[])
 
 	if (strcmp(argv[1], "--to") == 0)
 	{
-		const char* value = argv[3];
+		const char *value = argv[3];
 		int result = 0;
 		for (;;)
 		{
@@ -555,7 +555,7 @@ int main(int argc, char* argv[])
 
 	if (strcmp(argv[1], "--from") == 0)
 	{
-		const char* value = argv[3];
+		const char *value = argv[3];
 		int result = 0;
 		for (;;)
 		{
