@@ -3,7 +3,7 @@ PROG_NAME=unixtime
 PROG_VERSION=0.0.6
 PROG_URL=https://github.com/progman/unixtime
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-CXX=gcc
+CXX=g++
 LN=g++
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 #-D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
@@ -29,7 +29,7 @@ x32dbg: unixtime.cpp Makefile
 	@ln -sf $(PROG_NAME)-$(@)-$(PROG_VERSION) bin/$(PROG_NAME)
 	@objdump -Dslx bin/$(PROG_NAME)-$(@)-$(PROG_VERSION) > bin/$(PROG_NAME)-$(@)-$(PROG_VERSION).dump;
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-x32:    unixtime.cpp Makefile
+x32: unixtime.cpp Makefile
 	@if [ ! -e bin ]; then    (mkdir bin;)     fi
 	@$(CXX) submodule/lib_cpp/lib_cpp.cpp -c -o bin/lib_cpp.o -D'PROG_NAME="$(PROG_NAME)"' -D'PROG_VERSION="$(PROG_VERSION)"' -D'PROG_TARGET="$(@)"' -D'PROG_FULL_NAME="$(PROG_NAME)-$(@)-$(PROG_VERSION)"' -D'PROG_URL="$(PROG_URL)"' $(CFLAGS_x32REL)
 	@$(CXX) unixtime.cpp -c -o bin/unixtime.o -D'PROG_NAME="$(PROG_NAME)"' -D'PROG_VERSION="$(PROG_VERSION)"' -D'PROG_TARGET="$(@)"' -D'PROG_FULL_NAME="$(PROG_NAME)-$(@)-$(PROG_VERSION)"' -D'PROG_URL="$(PROG_URL)"' $(CFLAGS_x32REL)
@@ -44,7 +44,7 @@ x64dbg: unixtime.cpp Makefile
 	@ln -sf $(PROG_NAME)-$(@)-$(PROG_VERSION) bin/$(PROG_NAME)
 	@objdump -Dslx bin/$(PROG_NAME)-$(@)-$(PROG_VERSION) > bin/$(PROG_NAME)-$(@)-$(PROG_VERSION).dump;
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-x64:    unixtime.cpp Makefile
+x64: unixtime.cpp Makefile
 	@if [ ! -e bin ]; then    (mkdir bin;)     fi
 	@$(CXX) submodule/lib_cpp/lib_cpp.cpp -c -o bin/lib_cpp.o -D'PROG_NAME="$(PROG_NAME)"' -D'PROG_VERSION="$(PROG_VERSION)"' -D'PROG_TARGET="$(@)"' -D'PROG_FULL_NAME="$(PROG_NAME)-$(@)-$(PROG_VERSION)"' -D'PROG_URL="$(PROG_URL)"' $(CFLAGS_x64REL)
 	@$(CXX) unixtime.cpp -c -o bin/unixtime.o -D'PROG_NAME="$(PROG_NAME)"' -D'PROG_VERSION="$(PROG_VERSION)"' -D'PROG_TARGET="$(@)"' -D'PROG_FULL_NAME="$(PROG_NAME)-$(@)-$(PROG_VERSION)"' -D'PROG_URL="$(PROG_URL)"' $(CFLAGS_x64REL)
