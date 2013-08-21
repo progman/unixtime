@@ -3,12 +3,45 @@
 # 0.0.3
 # Alexey Potehin <gnuplanet@gmail.com>, http://www.gnuplanet.ru/doc/cv
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+APP='./bin/unixtime';
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+# run app
+function run_app()
+{
+	STDIN=$(cat);
+
+
+	if [ "${FLAG_VALGRIND}" != "1" ];
+	then
+		if [ "${STDIN}" != "" ];
+		then
+			STDOUT=$(echo "${STDIN}" | ${APP} "${@}");
+		else
+			STDOUT=$(${APP} "${@}");
+		fi
+	else
+		VAL="valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --log-file=valgrind.log";
+
+		STDOUT=$(echo "${STDIN}" | ${VAL} ${APP} "${@}");
+
+		echo '--------------------------' >> valgrind.all.log;
+		cat valgrind.log >> valgrind.all.log;
+		rm -rf valgrind.log;
+	fi
+
+
+	if [ "${STDOUT}" != "" ];
+	then
+		echo "${STDOUT}";
+	fi
+}
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 # test1
 function test1()
 {
 	A='04.11.2012 15:41:08';
-	B=$(./bin/unixtime --to '%d.%m.%Y %H:%M:%S' "${A}");
-	C=$(./bin/unixtime --from '%d.%m.%Y %H:%M:%S' "${B}");
+	B=$(run_app --to '%d.%m.%Y %H:%M:%S' "${A}" < /dev/null);
+	C=$(run_app --from '%d.%m.%Y %H:%M:%S' "${B}" < /dev/null);
 
 	if [ "${A}" != "${C}" ];
 	then
@@ -24,8 +57,8 @@ function test1()
 function test2()
 {
 	X='2012.11.04-15.41.08';
-	Y=$(./bin/unixtime --to '%Y.%m.%d-%H.%M.%S' "${X}");
-	Z=$(./bin/unixtime --from '%Y.%m.%d-%H.%M.%S' "${Y}");
+	Y=$(run_app --to '%Y.%m.%d-%H.%M.%S' "${X}" < /dev/null);
+	Z=$(run_app --from '%Y.%m.%d-%H.%M.%S' "${Y}" < /dev/null);
 
 	if [ "${X}" != "${Z}" ];
 	then
@@ -48,8 +81,8 @@ function test3()
 	echo '04.11.2012 15:41:09' >> "${TMPFILE1}";
 	echo '04.11.2012 15:41:10' >> "${TMPFILE1}";
 
-	cat "${TMPFILE1}" | ./bin/unixtime --to   '%d.%m.%Y %H:%M:%S' -- &> "${TMPFILE2}";
-	cat "${TMPFILE2}" | ./bin/unixtime --from '%d.%m.%Y %H:%M:%S' -- &> "${TMPFILE3}";
+	cat "${TMPFILE1}" | run_app --to   '%d.%m.%Y %H:%M:%S' -- &> "${TMPFILE2}";
+	cat "${TMPFILE2}" | run_app --from '%d.%m.%Y %H:%M:%S' -- &> "${TMPFILE3}";
 
 	HASH1=$(md5sum "${TMPFILE1}" | awk '{print $1}');
 	HASH2=$(md5sum "${TMPFILE3}" | awk '{print $1}');
@@ -71,7 +104,7 @@ function test3()
 # test4
 function test4()
 {
-	X=$(echo -e "\n04.11.2012 15:41:09" | ./bin/unixtime --to '%d.%m.%Y %H:%M:%S' -- | ./bin/unixtime --from '%d.%m.%Y %H:%M:%S' -- | tail -n 1);
+	X=$(echo -e "\n04.11.2012 15:41:09" | run_app --to '%d.%m.%Y %H:%M:%S' -- | run_app --from '%d.%m.%Y %H:%M:%S' -- | tail -n 1);
 
 	if [ "${X}" != "04.11.2012 15:41:09" ];
 	then
@@ -84,8 +117,8 @@ function test4()
 # test5
 function test5()
 {
-	X=$(echo -e "04.11.2012 15:41:09"    | ./bin/unixtime --to '%d.%m.%Y %H:%M:%S' --);
-	Y=$(echo -e "04.11.2012 03:41:09 PM" | ./bin/unixtime --to '%d.%m.%Y %I:%M:%S %p' --);
+	X=$(echo -e "04.11.2012 15:41:09"    | run_app --to '%d.%m.%Y %H:%M:%S' -- );
+	Y=$(echo -e "04.11.2012 03:41:09 PM" | run_app --to '%d.%m.%Y %I:%M:%S %p' -- );
 
 	if [ "${X}" != "${Y}" ];
 	then
@@ -96,8 +129,8 @@ function test5()
 	fi
 
 
-	X=$(echo -e "04.11.2012 04:41:09"    | ./bin/unixtime --to '%d.%m.%Y %H:%M:%S' --);
-	Y=$(echo -e "04.11.2012 04:41:09 am" | ./bin/unixtime --to '%d.%m.%Y %I:%M:%S %p' --);
+	X=$(echo -e "04.11.2012 04:41:09"    | run_app --to '%d.%m.%Y %H:%M:%S' -- );
+	Y=$(echo -e "04.11.2012 04:41:09 am" | run_app --to '%d.%m.%Y %I:%M:%S %p' -- );
 
 	if [ "${X}" != "${Y}" ];
 	then
@@ -113,9 +146,9 @@ function test6()
 {
 	X="04.11.2012 14:41:09";
 
-	Y=$(echo -e "${X}" | ./bin/unixtime --to '%d.%m.%Y %H:%M:%S' -- | ./bin/unixtime --from '%d.%m.%Y %I:%M:%S %p' --);
+	Y=$(echo -e "${X}" | run_app --to '%d.%m.%Y %H:%M:%S' -- | run_app --from '%d.%m.%Y %I:%M:%S %p' -- );
 
-	Z=$(echo -e "${Y}" | ./bin/unixtime --to '%d.%m.%Y %I:%M:%S %p' -- | ./bin/unixtime --from '%d.%m.%Y %H:%M:%S' --);
+	Z=$(echo -e "${Y}" | run_app --to '%d.%m.%Y %I:%M:%S %p' -- | run_app --from '%d.%m.%Y %H:%M:%S' -- );
 
 
 	if [ "${X}" != "${Z}" ];
@@ -143,7 +176,7 @@ function check_prog()
 	done
 }
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-if [ ! -e ./bin/unixtime ];
+if [ ! -e "${APP}" ];
 then
 	echo "ERROR: make it";
 	exit 1;
