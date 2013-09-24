@@ -164,20 +164,16 @@ function test6()
 # check depends
 function check_prog()
 {
-	local FLAG_OK=1;
-	for i in ${CHECK_PROG_LIST};
+	for i in ${1};
 	do
 		if [ "$(which ${i})" == "" ];
 		then
 			echo "FATAL: you must install \"${i}\"...";
-			echo;
-			echo;
-			FLAG_OK=0;
-			break;
+			return 1;
 		fi
 	done
 
-	return ${FLAG_OK};
+	return 0;
 }
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 if [ ! -e "${APP}" ];
@@ -188,7 +184,7 @@ fi
 
 
 check_prog "awk cat echo md5sum mktemp rm tail";
-if [ "${?}" == "0" ];
+if [ "${?}" != "0" ];
 then
 	exit 1;
 fi
