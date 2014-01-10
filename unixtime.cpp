@@ -8,7 +8,7 @@
 #include <string>
 #include <string.h>
 #include <algorithm>
-#include "submodule/lib_cpp/lib_cpp.h"
+#include "submodule/lib_cpp/lib_cpp.hpp"
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // global vars
 namespace global
@@ -335,12 +335,19 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 	gmtime_r(&time, &result);
 
 
-	std::string year  = lib_cpp::uint64_t2str(result.tm_year + 1900);
-	std::string month = lib_cpp::uint64_t2str(result.tm_mon + 1);
-	std::string day   = lib_cpp::uint64_t2str(result.tm_mday);
-	std::string hour  = lib_cpp::uint64_t2str(result.tm_hour);
-	std::string min   = lib_cpp::uint64_t2str(result.tm_min);
-	std::string sec   = lib_cpp::uint64_t2str(result.tm_sec);
+	std::string year;
+	std::string month;
+	std::string day;
+	std::string hour;
+	std::string min;
+	std::string sec;
+
+	lib_cpp::uint2str(result.tm_year + 1900, year);
+	lib_cpp::uint2str(result.tm_mon + 1, month);
+	lib_cpp::uint2str(result.tm_mday, day);
+	lib_cpp::uint2str(result.tm_hour, hour);
+	lib_cpp::uint2str(result.tm_min, min);
+	lib_cpp::uint2str(result.tm_sec, sec);
 
 
 	if (global::flag_debug != false)
@@ -396,7 +403,7 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 				{
 					if (result.tm_hour > 12)
 					{
-						hour = lib_cpp::uint64_t2str(result.tm_hour - 12);
+						lib_cpp::uint2str(result.tm_hour - 12, hour);
 					}
 					if (hour.size() == 1) str += '0';
 					str += hour;
