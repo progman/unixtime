@@ -8,7 +8,7 @@
 #include <string>
 #include <string.h>
 #include <algorithm>
-#include "submodule/lib_cpp/lib_cpp.hpp"
+#include "submodule/libcore.cpp/libcore.hpp"
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // global vars
 namespace global
@@ -38,7 +38,7 @@ bool get_val(const char *p, const char *p_end, size_t size, int &i, bool flag_am
 
 	if (flag_am_pm == false)
 	{
-		if (lib_cpp::is_udec(str) == false)
+		if (libcore::is_udec(str) == false)
 		{
 			return false;
 		}
@@ -325,7 +325,7 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 		return -1;
 	}
 
-	if (lib_cpp::is_udec(value) == false)
+	if (libcore::is_udec(value) == false)
 	{
 		return -1;
 	}
@@ -342,12 +342,12 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 	std::string min;
 	std::string sec;
 
-	if (lib_cpp::uint2str(result.tm_year + 1900, year) == false) return -1;
-	if (lib_cpp::uint2str(result.tm_mon + 1, month)    == false) return -1;
-	if (lib_cpp::uint2str(result.tm_mday, day)         == false) return -1;
-	if (lib_cpp::uint2str(result.tm_hour, hour)        == false) return -1;
-	if (lib_cpp::uint2str(result.tm_min, min)          == false) return -1;
-	if (lib_cpp::uint2str(result.tm_sec, sec)          == false) return -1;
+	if (libcore::uint2str(result.tm_year + 1900, year) == false) return -1;
+	if (libcore::uint2str(result.tm_mon + 1, month)    == false) return -1;
+	if (libcore::uint2str(result.tm_mday, day)         == false) return -1;
+	if (libcore::uint2str(result.tm_hour, hour)        == false) return -1;
+	if (libcore::uint2str(result.tm_min, min)          == false) return -1;
+	if (libcore::uint2str(result.tm_sec, sec)          == false) return -1;
 
 
 	if (global::flag_debug != false)
@@ -403,7 +403,7 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 				{
 					if (result.tm_hour > 12)
 					{
-						if (lib_cpp::uint2str(result.tm_hour - 12, hour) == false) return -1;
+						if (libcore::uint2str(result.tm_hour - 12, hour) == false) return -1;
 					}
 					if (hour.size() == 1) str += '0';
 					str += hour;
@@ -521,7 +521,7 @@ int main(int argc, char *argv[])
 	}
 
 
-	lib_cpp::env2bool(global::flag_debug, false, "FLAG_DEBUG");
+	libcore::env2bool(global::flag_debug, false, "FLAG_DEBUG");
 
 
 	if
