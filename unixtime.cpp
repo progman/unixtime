@@ -342,12 +342,12 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 	std::string min;
 	std::string sec;
 
-	if (libcore::uint2str(result.tm_year + 1900, year) == false) return -1;
-	if (libcore::uint2str(result.tm_mon + 1, month)    == false) return -1;
-	if (libcore::uint2str(result.tm_mday, day)         == false) return -1;
-	if (libcore::uint2str(result.tm_hour, hour)        == false) return -1;
-	if (libcore::uint2str(result.tm_min, min)          == false) return -1;
-	if (libcore::uint2str(result.tm_sec, sec)          == false) return -1;
+	if (libcore::uint2str(year,  result.tm_year + 1900) == false) return -1;
+	if (libcore::uint2str(month, result.tm_mon + 1)     == false) return -1;
+	if (libcore::uint2str(day,   result.tm_mday)        == false) return -1;
+	if (libcore::uint2str(hour,  result.tm_hour)        == false) return -1;
+	if (libcore::uint2str(min,   result.tm_min)         == false) return -1;
+	if (libcore::uint2str(sec,   result.tm_sec)         == false) return -1;
 
 
 	if (global::flag_debug != false)
@@ -403,7 +403,7 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 				{
 					if (result.tm_hour > 12)
 					{
-						if (libcore::uint2str(result.tm_hour - 12, hour) == false) return -1;
+						if (libcore::uint2str(hour, result.tm_hour - 12) == false) return -1;
 					}
 					if (hour.size() == 1) str += '0';
 					str += hour;
