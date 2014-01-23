@@ -342,12 +342,12 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 	std::string min;
 	std::string sec;
 
-	lib_cpp::uint2str(result.tm_year + 1900, year);
-	lib_cpp::uint2str(result.tm_mon + 1, month);
-	lib_cpp::uint2str(result.tm_mday, day);
-	lib_cpp::uint2str(result.tm_hour, hour);
-	lib_cpp::uint2str(result.tm_min, min);
-	lib_cpp::uint2str(result.tm_sec, sec);
+	if (lib_cpp::uint2str(result.tm_year + 1900, year) == false) return -1;
+	if (lib_cpp::uint2str(result.tm_mon + 1, month)    == false) return -1;
+	if (lib_cpp::uint2str(result.tm_mday, day)         == false) return -1;
+	if (lib_cpp::uint2str(result.tm_hour, hour)        == false) return -1;
+	if (lib_cpp::uint2str(result.tm_min, min)          == false) return -1;
+	if (lib_cpp::uint2str(result.tm_sec, sec)          == false) return -1;
 
 
 	if (global::flag_debug != false)
@@ -403,7 +403,7 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 				{
 					if (result.tm_hour > 12)
 					{
-						lib_cpp::uint2str(result.tm_hour - 12, hour);
+						if (lib_cpp::uint2str(result.tm_hour - 12, hour) == false) return -1;
 					}
 					if (hour.size() == 1) str += '0';
 					str += hour;
