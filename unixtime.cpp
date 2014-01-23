@@ -521,7 +521,7 @@ int main(int argc, char *argv[])
 	}
 
 
-	global::flag_debug = lib_cpp::env2bool("FLAG_DEBUG");
+	lib_cpp::env2bool(global::flag_debug, false, "FLAG_DEBUG");
 
 
 	if
