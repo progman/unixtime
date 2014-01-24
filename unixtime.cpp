@@ -483,13 +483,13 @@ int get_line_buf(char *line_buf, size_t size)
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // view help
-void help(const char *filename)
+void help()
 {
-	printf("%s\t(%s)\n", PROG_FULL_NAME, PROG_URL);
+	printf("%s    %s\n", PROG_FULL_NAME, PROG_URL);
 	printf("unixtime encoder/decoder from command line, or standard input\n");
 	printf("\n");
 
-	printf("example: %s --to '%%Y-%%m-%%d %%H:%%M:%%S' '2012-11-04 15:41:08'\n", filename);
+	printf("example: %s --to '%%Y-%%m-%%d %%H:%%M:%%S' '2012-11-04 15:41:08'\n", PROG_NAME);
 	printf("\n");
 	printf("Usage: unixtime [OPTION]\n");
 	printf("Options:\n");
@@ -516,7 +516,7 @@ int main(int argc, char *argv[])
 {
 	if (argc != 4)
 	{
-		help(argv[0]);
+		help();
 		return 1;
 	}
 
@@ -587,7 +587,7 @@ int main(int argc, char *argv[])
 	}
 
 
-	help(argv[0]);
+	help();
 
 
 	return 1;
