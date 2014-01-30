@@ -18,8 +18,7 @@ LFLAGS          :=
 CC              ?= gcc
 CXX             ?= g++
 LN              ?= g++
-#STRIP           ?= strip --strip-unneeded --remove-section=.comment
-STRIP           ?= strip
+STRIP           ?= strip --strip-unneeded --remove-section=.comment
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 CFLAGS_x32DBG   := $(CFLAGS)   -m32 -pedantic -Wall -Wextra -Wlong-long -Wunused -pipe -march=native -mtune=native -O0 -I./ -g3 -std=c99   -fdata-sections -ffunction-sections -fmax-errors=3 -ggdb -pg -fstack-protector-all
 CFLAGS_x32REL   := $(CFLAGS)   -m32 -pedantic -Wall -Wextra -Wlong-long -Wunused -pipe -march=native -mtune=native -O3 -I./ -g0 -std=c99   -fdata-sections -ffunction-sections -fmax-errors=3 -funroll-all-loops
