@@ -72,32 +72,49 @@ function test2()
 # test3
 function test3()
 {
-	TMPFILE1="$(mktemp)";
-	TMPFILE2="$(mktemp)";
-	TMPFILE3="$(mktemp)";
+	TMP1="$(mktemp)";
+	if [ "${?}" != "0" ];
+	then
+		echo "can't make tmp file";
+		exit 1;
+	fi
 
-	echo '04.11.2012 15:41:08' >> "${TMPFILE1}";
-	echo '04.11.2012 15:41:09' >> "${TMPFILE1}";
-	echo '04.11.2012 15:41:10' >> "${TMPFILE1}";
+	TMP2="$(mktemp)";
+	if [ "${?}" != "0" ];
+	then
+		echo "can't make tmp file";
+		exit 1;
+	fi
 
-	cat "${TMPFILE1}" | run_app --to   '%d.%m.%Y %H:%M:%S' -- &> "${TMPFILE2}";
-	cat "${TMPFILE2}" | run_app --from '%d.%m.%Y %H:%M:%S' -- &> "${TMPFILE3}";
+	TMP3="$(mktemp)";
+	if [ "${?}" != "0" ];
+	then
+		echo "can't make tmp file";
+		exit 1;
+	fi
 
-	HASH1=$(md5sum "${TMPFILE1}" | awk '{print $1}');
-	HASH2=$(md5sum "${TMPFILE3}" | awk '{print $1}');
+	echo '04.11.2012 15:41:08' >> "${TMP1}";
+	echo '04.11.2012 15:41:09' >> "${TMP1}";
+	echo '04.11.2012 15:41:10' >> "${TMP1}";
+
+	cat "${TMP1}" | run_app --to   '%d.%m.%Y %H:%M:%S' -- &> "${TMP2}";
+	cat "${TMP2}" | run_app --from '%d.%m.%Y %H:%M:%S' -- &> "${TMP3}";
+
+	HASH1=$(md5sum "${TMP1}" | awk '{print $1}');
+	HASH2=$(md5sum "${TMP3}" | awk '{print $1}');
 
 	if [ "${HASH1}" != "${HASH2}" ];
 	then
-		echo "TMPFILE1:${TMPFILE1}";
-		echo "TMPFILE2:${TMPFILE2}";
-		echo "TMPFILE3:${TMPFILE3}";
+		echo "TMP1:${TMP1}";
+		echo "TMP2:${TMP2}";
+		echo "TMP3:${TMP3}";
 		echo "ERROR[test3]: result different";
 		exit 1;
 	fi
 
-	rm -rf "${TMPFILE1}" &> /dev/null;
-	rm -rf "${TMPFILE2}" &> /dev/null;
-	rm -rf "${TMPFILE3}" &> /dev/null;
+	rm -rf "${TMP1}" &> /dev/null;
+	rm -rf "${TMP2}" &> /dev/null;
+	rm -rf "${TMP3}" &> /dev/null;
 }
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 # test4
