@@ -38,9 +38,9 @@ function run_app()
 # test1
 function test1()
 {
-	A='04.11.2012 15:41:08';
-	B=$(run_app --to '%d.%m.%Y %H:%M:%S' "${A}" < /dev/null);
-	C=$(run_app --from '%d.%m.%Y %H:%M:%S' "${B}" < /dev/null);
+	local A='04.11.2012 15:41:08';
+	local B=$(run_app --to '%d.%m.%Y %H:%M:%S' "${A}" < /dev/null);
+	local C=$(run_app --from '%d.%m.%Y %H:%M:%S' "${B}" < /dev/null);
 
 	if [ "${A}" != "${C}" ];
 	then
@@ -55,9 +55,9 @@ function test1()
 # test2
 function test2()
 {
-	X='2012.11.04-15.41.08';
-	Y=$(run_app --to '%Y.%m.%d-%H.%M.%S' "${X}" < /dev/null);
-	Z=$(run_app --from '%Y.%m.%d-%H.%M.%S' "${Y}" < /dev/null);
+	local X='2012.11.04-15.41.08';
+	local Y=$(run_app --to '%Y.%m.%d-%H.%M.%S' "${X}" < /dev/null);
+	local Z=$(run_app --from '%Y.%m.%d-%H.%M.%S' "${Y}" < /dev/null);
 
 	if [ "${X}" != "${Z}" ];
 	then
@@ -72,6 +72,7 @@ function test2()
 # test3
 function test3()
 {
+	local TMP1;
 	TMP1="$(mktemp)";
 	if [ "${?}" != "0" ];
 	then
@@ -79,6 +80,7 @@ function test3()
 		exit 1;
 	fi
 
+	local TMP2;
 	TMP2="$(mktemp)";
 	if [ "${?}" != "0" ];
 	then
@@ -86,6 +88,7 @@ function test3()
 		exit 1;
 	fi
 
+	local TMP3;
 	TMP3="$(mktemp)";
 	if [ "${?}" != "0" ];
 	then
@@ -100,8 +103,8 @@ function test3()
 	cat "${TMP1}" | run_app --to   '%d.%m.%Y %H:%M:%S' -- &> "${TMP2}";
 	cat "${TMP2}" | run_app --from '%d.%m.%Y %H:%M:%S' -- &> "${TMP3}";
 
-	HASH1=$(md5sum "${TMP1}" | awk '{print $1}');
-	HASH2=$(md5sum "${TMP3}" | awk '{print $1}');
+	local HASH1=$(md5sum "${TMP1}" | awk '{print $1}');
+	local HASH2=$(md5sum "${TMP3}" | awk '{print $1}');
 
 	if [ "${HASH1}" != "${HASH2}" ];
 	then
@@ -120,7 +123,7 @@ function test3()
 # test4
 function test4()
 {
-	X=$(echo -e "\n04.11.2012 15:41:09" | run_app --to '%d.%m.%Y %H:%M:%S' -- | run_app --from '%d.%m.%Y %H:%M:%S' -- | tail -n 1);
+	local X=$(echo -e "\n04.11.2012 15:41:09" | run_app --to '%d.%m.%Y %H:%M:%S' -- | run_app --from '%d.%m.%Y %H:%M:%S' -- | tail -n 1);
 
 	if [ "${X}" != "04.11.2012 15:41:09" ];
 	then
@@ -133,6 +136,9 @@ function test4()
 # test5
 function test5()
 {
+	local X;
+	local Y;
+
 	X=$(echo -e "04.11.2012 15:41:09"    | run_app --to '%d.%m.%Y %H:%M:%S' -- );
 	Y=$(echo -e "04.11.2012 03:41:09 PM" | run_app --to '%d.%m.%Y %I:%M:%S %p' -- );
 
@@ -160,11 +166,11 @@ function test5()
 # test6
 function test6()
 {
-	X="04.11.2012 14:41:09";
+	local X="04.11.2012 14:41:09";
 
-	Y=$(echo -e "${X}" | run_app --to '%d.%m.%Y %H:%M:%S' -- | run_app --from '%d.%m.%Y %I:%M:%S %p' -- );
+	local Y=$(echo -e "${X}" | run_app --to '%d.%m.%Y %H:%M:%S' -- | run_app --from '%d.%m.%Y %I:%M:%S %p' -- );
 
-	Z=$(echo -e "${Y}" | run_app --to '%d.%m.%Y %I:%M:%S %p' -- | run_app --from '%d.%m.%Y %H:%M:%S' -- );
+	local Z=$(echo -e "${Y}" | run_app --to '%d.%m.%Y %I:%M:%S %p' -- | run_app --from '%d.%m.%Y %H:%M:%S' -- );
 
 
 	if [ "${X}" != "${Z}" ];
