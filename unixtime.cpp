@@ -8,6 +8,7 @@
 #include <time.h>
 #include <string>
 #include <string.h>
+#include <errno.h>
 #include <algorithm>
 #include "submodule/libcore.cpp/libcore.hpp"
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -506,7 +507,7 @@ void help()
 	printf("Options:\n");
 	printf("    --to   FORMAT VALUE    encode to unixtime\n");
 	printf("    --from FORMAT VALUE    decode from unixtime\n");
-	printf("    --tz=NUMBER    time offset (time zone), default is 0\n");
+	printf("    --tz=NUMBER    time zone(time offset), default is local\n");
 
 	printf("FORMAT controls body VALUE. Interpreted sequences are:\n");
 	printf("    %%%%     a literal %%\n");
@@ -527,6 +528,25 @@ void help()
 int main(int argc, char *argv[])
 {
 	libcore::env2bool(global::flag_debug, false, "FLAG_DEBUG");
+
+
+// set default tz
+	time_t cur_time = time(NULL);
+	if (cur_time == -1)
+	{
+		fprintf(stderr, "ERROR[time()]: %s\n", strerror(errno));
+		fflush(stderr);
+		return 1;
+	}
+
+	struct tm *local_time = localtime(&cur_time);
+	if (local_time == NULL)
+	{
+		fprintf(stderr, "ERROR[localtime()]: %s\n", strerror(errno));
+		fflush(stderr);
+		return 1;
+	}
+	global::tz = local_time->tm_gmtoff / (60 * 60);
 
 
 // parse command line args
