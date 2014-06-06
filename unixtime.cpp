@@ -313,7 +313,7 @@ int unixtime_encode(const char *format, const char *value, time_t *time)
 	my_tm.tm_mday = day;
 	my_tm.tm_mon  = month - 1;
 	my_tm.tm_year = year - 1900;
-	*time = timegm(&my_tm) + (global::tz * 60 * 60);
+	*time = timegm(&my_tm) - (global::tz * 60 * 60);
 	if (*time == -1)
 	{
 		*time = 0;
