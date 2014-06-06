@@ -4,6 +4,7 @@
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <time.h>
 #include <string>
 #include <string.h>
@@ -13,8 +14,17 @@
 // global vars
 namespace global
 {
-	bool flag_debug = false;
-	bool flag_stdin = false;
+	bool flag_debug  = false;
+	bool flag_stdin  = false;
+
+	bool flag_decode = false;
+	bool flag_encode = false;
+
+	int64_t tz       = 0;
+
+	std::string format;
+	std::string value;
+
 	char line_buf[4096];
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -302,7 +312,7 @@ int unixtime_encode(const char *format, const char *value, time_t *time)
 	my_tm.tm_mday = day;
 	my_tm.tm_mon  = month - 1;
 	my_tm.tm_year = year - 1900;
-	*time = timegm(&my_tm);
+	*time = timegm(&my_tm) + (global::tz * 60 * 60);
 	if (*time == -1)
 	{
 		*time = 0;
@@ -332,6 +342,7 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 
 
 	time = atoi(value);
+	time += (global::tz * 60 * 60);
 	gmtime_r(&time, &result);
 
 
@@ -495,6 +506,7 @@ void help()
 	printf("Options:\n");
 	printf("    --to   FORMAT VALUE    encode to unixtime\n");
 	printf("    --from FORMAT VALUE    decode from unixtime\n");
+	printf("    --tz=NUMBER    time offset (time zone), default is 0\n");
 
 	printf("FORMAT controls body VALUE. Interpreted sequences are:\n");
 	printf("    %%%%     a literal %%\n");
@@ -514,55 +526,117 @@ void help()
 // general function
 int main(int argc, char *argv[])
 {
-	if (argc != 4)
-	{
-		help();
-		return 1;
-	}
-
-
 	libcore::env2bool(global::flag_debug, false, "FLAG_DEBUG");
 
 
-	if
-	(
-		(strcmp(argv[3], "-")  == 0) ||
-		(strcmp(argv[3], "--") == 0)
-	)
+// parse command line args
+	for (int i=1; i < argc; i++)
 	{
-		global::flag_stdin = true;
-	}
-
-
-	if (strcmp(argv[1], "--to") == 0)
-	{
-		const char *value = argv[3];
-		int result = 0;
-		for (;;)
+		if ((strcmp(argv[i], "--help") == 0) || (strcmp(argv[i], "-help") == 0) || (strcmp(argv[i], "-h") == 0))
 		{
-			if (global::flag_stdin == true)
-			{
-				if (get_line_buf(global::line_buf, sizeof(global::line_buf)) == -1) break;
-				value = global::line_buf;
-			}
-
-			time_t time;
-			int rc = unixtime_encode(argv[2], value, &time);
-			if (rc == -1)
-			{
-				result = 1;
-			}
-			printf("%lu\n", time);
-
-			if (global::flag_stdin == false) break;
+			help();
+			return 1;
 		}
-		return result;
+
+
+		{
+			std::string key = argv[i];
+			std::string tmpl = "--tz=";
+			if ((key.size() >= tmpl.size()) && (key.substr(0, tmpl.size()) == tmpl))
+			{
+				std::string value = key.substr(tmpl.size(), key.size() - 1);
+				if (libcore::dec2sint(global::tz, value) == false)
+				{
+					fprintf(stderr, "ERROR: invalid tz value \"%s\"\n", value.c_str());
+					fflush(stderr);
+					return 1;
+				}
+				continue;
+			}
+		}
+
+
+		if (strcmp(argv[i], "--to") == 0)
+		{
+			global::flag_encode = true;
+
+			if ((i + 1) == argc)
+			{
+				help();
+				return 1;
+			}
+			i += 1;
+			global::format = argv[i];
+
+			if ((i + 1) == argc)
+			{
+				help();
+				return 1;
+			}
+			i += 1;
+			global::value = argv[i];
+
+			if ((i + 1) != argc)
+			{
+				help();
+				return 1;
+			}
+
+			if
+			(
+				(strcmp(argv[i], "-")  == 0) ||
+				(strcmp(argv[i], "--") == 0)
+			)
+			{
+				global::flag_stdin = true;
+			}
+			continue;
+		}
+
+
+		if (strcmp(argv[i], "--from") == 0)
+		{
+			global::flag_decode = true;
+
+			if ((i + 1) == argc)
+			{
+				help();
+				return 1;
+			}
+			i += 1;
+			global::format = argv[i];
+
+			if ((i + 1) == argc)
+			{
+				help();
+				return 1;
+			}
+			i += 1;
+			global::value = argv[i];
+
+			if ((i + 1) != argc)
+			{
+				help();
+				return 1;
+			}
+
+			if
+			(
+				(strcmp(argv[i], "-")  == 0) ||
+				(strcmp(argv[i], "--") == 0)
+			)
+			{
+				global::flag_stdin = true;
+			}
+			continue;
+		}
 	}
 
 
-	if (strcmp(argv[1], "--from") == 0)
+// from
+	if (global::flag_decode != false)
 	{
-		const char *value = argv[3];
+		const char *value = global::value.c_str();
 		int result = 0;
 		for (;;)
 		{
@@ -573,13 +647,40 @@ int main(int argc, char *argv[])
 			}
 
 			std::string str;
-			int rc = unixtime_decode(argv[2], value, str);
+			int rc = unixtime_decode(global::format.c_str(), value, str);
 			if (rc == -1)
 			{
 				result = 1;
-				unixtime_decode(argv[2], "0", str);
+				unixtime_decode(global::format.c_str(), "0", str);
 			}
 			printf("%s\n", str.c_str());
+
+			if (global::flag_stdin == false) break;
+		}
+		return result;
+	}
+
+
+// to
+	if (global::flag_encode != false)
+	{
+		const char *value = global::value.c_str();
+		int result = 0;
+		for (;;)
+		{
+			if (global::flag_stdin == true)
+			{
+				if (get_line_buf(global::line_buf, sizeof(global::line_buf)) == -1) break;
+				value = global::line_buf;
+			}
+
+			time_t time;
+			int rc = unixtime_encode(global::format.c_str(), value, &time);
+			if (rc == -1)
+			{
+				result = 1;
+			}
+			printf("%lu\n", time);
 
 			if (global::flag_stdin == false) break;
 		}
