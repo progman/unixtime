@@ -16,16 +16,24 @@ function run_app()
 		STDOUT=$("${APP}" "${@}");
 		RESULT="${?}";
 	else
-		local VAL="valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --log-file=valgrind.log";
+		local LOG_ID=0;
+		local LOG_NAME;
 
-		STDOUT=$("${VAL}" "${APP}" "${@}");
+		while true;
+		do
+			LOG_NAME=$(printf "valgrind.%03u\n" ${LOG_ID});
+
+			if [ ! -e "${LOG_NAME}" ];
+			then
+				break;
+			fi
+
+			(( LOG_ID++ ));
+		done
+
+		STDOUT=$(valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --log-file="${LOG_NAME}" "${APP}" "${@}");
 		RESULT="${?}";
-
-		echo '--------------------------' >> valgrind.all.log;
-		cat valgrind.log >> valgrind.all.log;
-		rm -rf valgrind.log;
 	fi
-
 
 	if [ "${STDOUT}" != "" ];
 	then
