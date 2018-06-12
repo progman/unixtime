@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-// 0.0.6
+// 0.0.7
 // Alexey Potehin <gnuplanet@gmail.com>, http://www.gnuplanet.ru/doc/cv
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 #include <stdio.h>
@@ -27,57 +27,111 @@ namespace global
 	std::string value;
 
 	char line_buf[4096];
+
+	enum get_mode { GET_REGULAR, GET_AM_PM, GET_MS };
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+// 0 -> 0, 00 -> 0, 000 -> 0, 100 -> 1, 101 -> 101
+void drop_right_zero(std::string& str)
+{
+	if (str.size() == 0) return;
+
+	for (;;)
+	{
+		if (str.size() == 1) break;
+
+		if (str[str.size() - 1] != '0') break;
+
+		str.resize(str.size() - 1);
+	}
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // get val from string area
-bool get_val(const char *p, const char *p_end, size_t size, int &i, bool flag_am_pm = false)
+size_t get_val(const char *p, const char *p_end, size_t size, int &i, global::get_mode mode)
 {
 	std::string str;
-
-	if ((p + size) > p_end)
-	{
-		return false;
-	}
-
 	str.clear();
 
-	for (size_t i=0; i < size; i++)
+
+	if
+	(
+		(mode == global::get_mode::GET_REGULAR) ||
+		(mode == global::get_mode::GET_AM_PM)
+	)
 	{
-		str += *p;
-		p++;
+		if ((p + size) > p_end)
+		{
+			return 0;
+		}
+
+		for (size_t i=0; i < size; i++)
+		{
+			str += *p;
+			p++;
+		}
 	}
 
-	if (flag_am_pm == false)
+
+	if (mode == global::get_mode::GET_MS)
+	{
+		if ((p + size) > p_end)
+		{
+			size = p_end - p;
+		}
+
+		if (size == 0)
+		{
+			return 0;
+		}
+
+		for (size_t i=0; i < size; i++)
+		{
+			str += *p;
+			p++;
+		}
+	}
+
+
+	if
+	(
+		(mode == global::get_mode::GET_REGULAR) ||
+		(mode == global::get_mode::GET_MS)
+	)
 	{
 		if (libcore::is_udec(str) == false)
 		{
-			return false;
+			return 0;
 		}
 
 		i = atoi(str.c_str());
 
-		return true;
+		return str.size();
 	}
 
-	std::transform(str.begin(), str.end(), str.begin(), toupper);
 
-	if (str == "AM")
+	if (mode == global::get_mode::GET_AM_PM)
 	{
-		i = 0;
-		return true;
+		std::transform(str.begin(), str.end(), str.begin(), toupper);
+
+		if (str == "AM")
+		{
+			i = 0;
+			return str.size();
+		}
+
+		if (str == "PM")
+		{
+			i = 1;
+			return str.size();
+		}
 	}
 
-	if (str == "PM")
-	{
-		i = 1;
-		return true;
-	}
 
-	return false;
+	return 0;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // encode string to unixtime
-int unixtime_encode(const char *format, const char *value, time_t *time)
+int unixtime_encode(const char *format, const char *value, time_t *time, int64_t *time_ms)
 {
 	if ((format == NULL) || (value == NULL))
 	{
@@ -100,6 +154,7 @@ int unixtime_encode(const char *format, const char *value, time_t *time)
 	bool flag_min   = false;
 	bool flag_sec   = false;
 	bool flag_am_pm = false;
+	bool flag_ms    = false;
 
 
 	int year  = 0;
@@ -109,6 +164,9 @@ int unixtime_encode(const char *format, const char *value, time_t *time)
 	int min   = 0;
 	int sec   = 0;
 	int am_pm = 0;
+	int ms    = 0;
+
+	size_t value_size;
 
 
 	for (;;)
@@ -124,40 +182,44 @@ int unixtime_encode(const char *format, const char *value, time_t *time)
 			{
 				case 'Y':
 				{
-					if (get_val(value, value_end, 4, year) == false)
+					value_size = get_val(value, value_end, 4, year, global::get_mode::GET_REGULAR);
+					if (value_size == 0)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_year = true;
-					value += 4;
+					value += value_size;
 					break;
 				}
 				case 'm':
 				{
-					if (get_val(value, value_end, 2, month) == false)
+					value_size = get_val(value, value_end, 2, month, global::get_mode::GET_REGULAR);
+					if (value_size == 0)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_month = true;
-					value += 2;
+					value += value_size;
 					break;
 				}
 				case 'd':
 				{
-					if (get_val(value, value_end, 2, day) == false)
+					value_size = get_val(value, value_end, 2, day, global::get_mode::GET_REGULAR);
+					if (value_size == 0)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_day = true;
-					value += 2;
+					value += value_size;
 					break;
 				}
 				case 'p':
 				{
-					if (get_val(value, value_end, 2, am_pm, true) == false)
+					value_size = get_val(value, value_end, 2, am_pm, global::get_mode::GET_AM_PM);
+					if (value_size == 0)
 					{
 						*time = 0;
 						return -1;
@@ -177,12 +239,13 @@ int unixtime_encode(const char *format, const char *value, time_t *time)
 					}
 
 					flag_am_pm = true;
-					value += 2;
+					value += value_size;
 					break;
 				}
 				case 'I':
 				{
-					if (get_val(value, value_end, 2, hour) == false)
+					value_size = get_val(value, value_end, 2, hour, global::get_mode::GET_REGULAR);
+					if (value_size == 0)
 					{
 						*time = 0;
 						return -1;
@@ -200,12 +263,13 @@ int unixtime_encode(const char *format, const char *value, time_t *time)
 					}
 
 					flag_hour = true;
-					value += 2;
+					value += value_size;
 					break;
 				}
 				case 'H':
 				{
-					if (get_val(value, value_end, 2, hour) == false)
+					value_size = get_val(value, value_end, 2, hour, global::get_mode::GET_REGULAR);
+					if (value_size == 0)
 					{
 						*time = 0;
 						return -1;
@@ -225,29 +289,43 @@ int unixtime_encode(const char *format, const char *value, time_t *time)
 					}
 
 					flag_hour = true;
-					value += 2;
+					value += value_size;
 					break;
 				}
 				case 'M':
 				{
-					if (get_val(value, value_end, 2, min) == false)
+					value_size = get_val(value, value_end, 2, min, global::get_mode::GET_REGULAR);
+					if (value_size == 0)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_min = true;
-					value += 2;
+					value += value_size;
 					break;
 				}
 				case 'S':
 				{
-					if (get_val(value, value_end, 2, sec) == false)
+					value_size = get_val(value, value_end, 2, sec, global::get_mode::GET_REGULAR);
+					if (value_size == 0)
 					{
 						*time = 0;
 						return -1;
 					}
 					flag_sec = true;
-					value += 2;
+					value += value_size;
+					break;
+				}
+				case 's':
+				{
+					value_size = get_val(value, value_end, 6, ms, global::get_mode::GET_MS);
+					if (value_size == 0)
+					{
+						*time = 0;
+						return -1;
+					}
+					flag_ms = true;
+					value += value_size;
 					break;
 				}
 				case '?':
@@ -321,31 +399,20 @@ int unixtime_encode(const char *format, const char *value, time_t *time)
 	}
 
 
+	if (flag_ms == true)
+	{
+		*time_ms = ((*time) * 1000000) + ms;
+	}
+
+
 	return 0;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // decode unixtime to string
-int unixtime_decode(const char *format, const char *value, std::string &str)
+int unixtime_decode(const char *format, std::string &value, std::string &str)
 {
 	time_t time = 0;
 	struct tm result;
-
-
-	if (value == NULL)
-	{
-		return -1;
-	}
-
-	if (libcore::is_udec(value) == false)
-	{
-		return -1;
-	}
-
-
-	time = atoi(value);
-	time += (global::tz * 60 * 60);
-	gmtime_r(&time, &result);
-
 
 	std::string year;
 	std::string month;
@@ -353,6 +420,35 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 	std::string hour;
 	std::string min;
 	std::string sec;
+	std::string ms = "0";
+
+
+	if (value.size() == 0)
+	{
+		return -1;
+	}
+
+
+	if (libcore::is_udec(value) == false)
+	{
+		return -1;
+	}
+
+
+// 1528799349000000 -> 1528799349
+	if (value.size() == 16)
+	{
+		ms = value.substr(10, 6);
+		drop_right_zero(ms);
+
+		value = value.substr(0, 10);
+	}
+
+
+	time = atoi(value.c_str());
+	time += (global::tz * 60 * 60);
+	gmtime_r(&time, &result);
+
 
 	if (libcore::uint2str(year,  result.tm_year + 1900) == false) return -1;
 	if (libcore::uint2str(month, result.tm_mon + 1)     == false) return -1;
@@ -370,6 +466,7 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 		printf("hour  = \"%s\"\n", hour.c_str());
 		printf("min   = \"%s\"\n", min.c_str());
 		printf("sec   = \"%s\"\n", sec.c_str());
+		printf("ms    = \"%s\"\n", ms.c_str());
 	}
 
 
@@ -439,6 +536,11 @@ int unixtime_decode(const char *format, const char *value, std::string &str)
 					str += sec;
 					break;
 				}
+				case 's':
+				{
+					str += ms;
+					break;
+				}
 				default:
 				{
 					break;
@@ -501,12 +603,16 @@ void help()
 	printf("unixtime encoder/decoder from command line, or standard input\n");
 	printf("\n");
 
-	printf("example: %s --to '%%Y-%%m-%%d %%H:%%M:%%S' '2012-11-04 15:41:08'\n", PROG_NAME);
+	printf("example: %s --to   '%%Y-%%m-%%d %%H:%%M:%%S'    '2018-06-12 13:29:09'\n", PROG_NAME);
+	printf("         %s --to   '%%Y-%%m-%%d %%H:%%M:%%S.%%s' '2018-06-12 13:29:09.866429'\n", PROG_NAME);
+	printf("         %s --from '%%Y-%%m-%%d %%H:%%M:%%S'    1528799349\n", PROG_NAME);
+	printf("         %s --from '%%Y-%%m-%%d %%H:%%M:%%S.%%s' 1528799349866429\n", PROG_NAME);
+
 	printf("\n");
 	printf("Usage: unixtime [OPTION]\n");
 	printf("Options:\n");
-	printf("    --to   FORMAT VALUE    encode to unixtime\n");
-	printf("    --from FORMAT VALUE    decode from unixtime\n");
+	printf("    --to   FORMAT VALUE    encode to unixtime/unixmicrotime\n");
+	printf("    --from FORMAT VALUE    decode from unixtime/unixmicrotime\n");
 	printf("    --tz=NUMBER    time zone(time offset), default is local\n");
 
 	printf("FORMAT controls body VALUE. Interpreted sequences are:\n");
@@ -520,6 +626,7 @@ void help()
 	printf("    %%H     hour (00..23)\n");
 	printf("    %%M     minute (00..59)\n");
 	printf("    %%S     second (00..60)\n");
+	printf("    %%s     microsecond (0..999999)\n");
 
 	printf("When VALUE is - or --, read standard input.\n");
 }
@@ -656,28 +763,34 @@ int main(int argc, char *argv[])
 // from
 	if (global::flag_decode != false)
 	{
-		const char *value = global::value.c_str();
-		int result = 0;
+		std::string value = global::value;
+		std::string str;
+		int rc;
 		for (;;)
 		{
 			if (global::flag_stdin == true)
 			{
-				if (get_line_buf(global::line_buf, sizeof(global::line_buf)) == -1) break;
+				rc = get_line_buf(global::line_buf, sizeof(global::line_buf));
+				if (rc == -1) break;
 				value = global::line_buf;
 			}
 
-			std::string str;
-			int rc = unixtime_decode(global::format.c_str(), value, str);
+			str.clear();
+			rc = unixtime_decode(global::format.c_str(), value, str);
 			if (rc == -1)
 			{
-				result = 1;
-				unixtime_decode(global::format.c_str(), "0", str);
+				value  = "0";
+				rc = unixtime_decode(global::format.c_str(), value, str);
+				if (rc == -1)
+				{
+					return 1;
+				}
 			}
 			printf("%s\n", str.c_str());
 
 			if (global::flag_stdin == false) break;
 		}
-		return result;
+		return 0;
 	}
 
 
@@ -685,26 +798,37 @@ int main(int argc, char *argv[])
 	if (global::flag_encode != false)
 	{
 		const char *value = global::value.c_str();
-		int result = 0;
+		int rc;
+		time_t time;
+		int64_t time_ms;
 		for (;;)
 		{
 			if (global::flag_stdin == true)
 			{
-				if (get_line_buf(global::line_buf, sizeof(global::line_buf)) == -1) break;
+				rc = get_line_buf(global::line_buf, sizeof(global::line_buf));
+				if (rc == -1) break;
 				value = global::line_buf;
 			}
 
-			time_t time;
-			int rc = unixtime_encode(global::format.c_str(), value, &time);
+			time_ms = -1;
+			int rc = unixtime_encode(global::format.c_str(), value, &time, &time_ms);
 			if (rc == -1)
 			{
-				result = 1;
+				return 1;
 			}
-			printf("%lu\n", time);
+
+			if (time_ms == -1)
+			{
+				printf("%lu\n", time);
+			}
+			else
+			{
+				printf("%ld\n", time_ms);
+			}
 
 			if (global::flag_stdin == false) break;
 		}
-		return result;
+		return 0;
 	}
 
 
