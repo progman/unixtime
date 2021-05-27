@@ -1,7 +1,7 @@
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-// 0.0.8
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+// 0.0.9
 // Alexey Potehin <gnuplanet@gmail.com>, http://www.gnuplanet.ru/doc/cv
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <algorithm>
 #include "submodule/libcore.cpp/libcore.hpp"
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // global vars
 namespace global
 {
@@ -28,9 +28,9 @@ namespace global
 
 	char line_buf[4096];
 
-	enum get_mode { GET_REGULAR, GET_AM_PM, GET_MS };
+	enum get_mode { GET_REGULAR, GET_AM_PM, GET_MS, GET_NS };
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // 0 -> 0, 00 -> 0, 000 -> 0, 100 -> 1, 101 -> 101
 void drop_right_zero(std::string& str)
 {
@@ -45,7 +45,7 @@ void drop_right_zero(std::string& str)
 		str.resize(str.size() - 1);
 	}
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // get val from string area
 size_t get_val(const char *p, const char *p_end, size_t size, int &i, global::get_mode mode)
 {
@@ -72,7 +72,11 @@ size_t get_val(const char *p, const char *p_end, size_t size, int &i, global::ge
 	}
 
 
-	if (mode == global::get_mode::GET_MS)
+	if
+	(
+		(mode == global::get_mode::GET_MS) ||
+		(mode == global::get_mode::GET_NS)
+	)
 	{
 		if ((p + size) > p_end)
 		{
@@ -95,7 +99,8 @@ size_t get_val(const char *p, const char *p_end, size_t size, int &i, global::ge
 	if
 	(
 		(mode == global::get_mode::GET_REGULAR) ||
-		(mode == global::get_mode::GET_MS)
+		(mode == global::get_mode::GET_MS) ||
+		(mode == global::get_mode::GET_NS)
 	)
 	{
 		if (libcore::is_udec(str) == false)
@@ -129,17 +134,17 @@ size_t get_val(const char *p, const char *p_end, size_t size, int &i, global::ge
 
 	return 0;
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // encode string to unixtime
-int unixtime_encode(const char *format, const char *value, time_t *time, int64_t *time_ms)
+int unixtime_encode(const char *format, const char *value, uint64_t *time_out)
 {
 	if ((format == NULL) || (value == NULL))
 	{
-		*time = 0;
 		return -1;
 	}
 
 
+	time_t time = 0;
 	const char *format_end = format;
 	while (*format_end != 0) format_end++;
 
@@ -155,6 +160,7 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 	bool flag_sec   = false;
 	bool flag_am_pm = false;
 	bool flag_ms    = false;
+	bool flag_ns    = false;
 
 
 	int year  = 0;
@@ -165,6 +171,7 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 	int sec   = 0;
 	int am_pm = 0;
 	int ms    = 0;
+	int ns    = 0;
 
 	size_t value_size;
 
@@ -185,7 +192,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					value_size = get_val(value, value_end, 4, year, global::get_mode::GET_REGULAR);
 					if (value_size == 0)
 					{
-						*time = 0;
 						return -1;
 					}
 					flag_year = true;
@@ -197,7 +203,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					value_size = get_val(value, value_end, 2, month, global::get_mode::GET_REGULAR);
 					if (value_size == 0)
 					{
-						*time = 0;
 						return -1;
 					}
 					flag_month = true;
@@ -209,7 +214,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					value_size = get_val(value, value_end, 2, day, global::get_mode::GET_REGULAR);
 					if (value_size == 0)
 					{
-						*time = 0;
 						return -1;
 					}
 					flag_day = true;
@@ -221,7 +225,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					value_size = get_val(value, value_end, 2, am_pm, global::get_mode::GET_AM_PM);
 					if (value_size == 0)
 					{
-						*time = 0;
 						return -1;
 					}
 
@@ -229,7 +232,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					{
 						if (hour > 12)
 						{
-							*time = 0;
 							return -1;
 						}
 						if (am_pm != 0)
@@ -247,13 +249,11 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					value_size = get_val(value, value_end, 2, hour, global::get_mode::GET_REGULAR);
 					if (value_size == 0)
 					{
-						*time = 0;
 						return -1;
 					}
 
 					if (hour > 12)
 					{
-						*time = 0;
 						return -1;
 					}
 
@@ -271,7 +271,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					value_size = get_val(value, value_end, 2, hour, global::get_mode::GET_REGULAR);
 					if (value_size == 0)
 					{
-						*time = 0;
 						return -1;
 					}
 
@@ -279,7 +278,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					{
 						if (hour > 12)
 						{
-							*time = 0;
 							return -1;
 						}
 						if (am_pm != 0)
@@ -297,7 +295,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					value_size = get_val(value, value_end, 2, min, global::get_mode::GET_REGULAR);
 					if (value_size == 0)
 					{
-						*time = 0;
 						return -1;
 					}
 					flag_min = true;
@@ -309,7 +306,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					value_size = get_val(value, value_end, 2, sec, global::get_mode::GET_REGULAR);
 					if (value_size == 0)
 					{
-						*time = 0;
 						return -1;
 					}
 					flag_sec = true;
@@ -321,10 +317,20 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 					value_size = get_val(value, value_end, 6, ms, global::get_mode::GET_MS);
 					if (value_size == 0)
 					{
-						*time = 0;
 						return -1;
 					}
 					flag_ms = true;
+					value += value_size;
+					break;
+				}
+				case 'N':
+				{
+					value_size = get_val(value, value_end, 9, ns, global::get_mode::GET_NS);
+					if (value_size == 0)
+					{
+						return -1;
+					}
+					flag_ns = true;
 					value += value_size;
 					break;
 				}
@@ -337,7 +343,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 				{
 					if (*value != *format)
 					{
-						*time = 0;
 						return -1;
 					}
 					value++;
@@ -349,7 +354,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 		{
 			if (*value != *format)
 			{
-				*time = 0;
 				return -1;
 			}
 			value++;
@@ -379,7 +383,6 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 		(flag_sec   == false)
 	)
 	{
-		*time = 0;
 		return -1;
 	}
 
@@ -391,23 +394,29 @@ int unixtime_encode(const char *format, const char *value, time_t *time, int64_t
 	my_tm.tm_mday = day;
 	my_tm.tm_mon  = month - 1;
 	my_tm.tm_year = year - 1900;
-	*time = timegm(&my_tm) - (global::tz * 60 * 60);
-	if (*time == -1)
+	time = timegm(&my_tm) - (global::tz * 60 * 60);
+	if (time == -1)
 	{
-		*time = 0;
 		return -1;
 	}
+	*time_out = time;
 
 
 	if (flag_ms == true)
 	{
-		*time_ms = ((*time) * 1000000) + ms;
+		*time_out = ((time) * 1000000) + ms;
+	}
+
+
+	if (flag_ns == true)
+	{
+		*time_out = ((time) * 1000000000) + ns;
 	}
 
 
 	return 0;
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // decode unixtime to string
 int unixtime_decode(const char *format, std::string &value, std::string &str)
 {
@@ -435,10 +444,20 @@ int unixtime_decode(const char *format, std::string &value, std::string &str)
 	}
 
 
-// 1528799349000000 -> 1528799349
+// 1528799349866429 -> 1528799349
 	if (value.size() == 16)
 	{
 		ms = value.substr(10, 6);
+		drop_right_zero(ms);
+
+		value = value.substr(0, 10);
+	}
+
+
+// 1528799349866429541 -> 1528799349
+	if (value.size() == 19)
+	{
+		ms = value.substr(10, 9);
 		drop_right_zero(ms);
 
 		value = value.substr(0, 10);
@@ -541,6 +560,11 @@ int unixtime_decode(const char *format, std::string &value, std::string &str)
 					str += ms;
 					break;
 				}
+				case 'N':
+				{
+					str += ms;
+					break;
+				}
 				default:
 				{
 					break;
@@ -557,7 +581,7 @@ int unixtime_decode(const char *format, std::string &value, std::string &str)
 
 	return 0;
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // get line buf from stdin and convert and check it
 int get_line_buf(char *line_buf, size_t size)
 {
@@ -595,7 +619,7 @@ int get_line_buf(char *line_buf, size_t size)
 
 	return 0;
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // view help
 void help()
 {
@@ -605,8 +629,10 @@ void help()
 
 	printf("example: %s --to   '%%Y-%%m-%%d %%H:%%M:%%S'    '2018-06-12 13:29:09'\n", PROG_NAME);
 	printf("         %s --to   '%%Y-%%m-%%d %%H:%%M:%%S.%%s' '2018-06-12 13:29:09.866429'\n", PROG_NAME);
+	printf("         %s --to   '%%Y-%%m-%%d %%H:%%M:%%S.%%N' '2018-06-12 13:29:09.866429541'\n", PROG_NAME);
 	printf("         %s --from '%%Y-%%m-%%d %%H:%%M:%%S'    1528799349\n", PROG_NAME);
 	printf("         %s --from '%%Y-%%m-%%d %%H:%%M:%%S.%%s' 1528799349866429\n", PROG_NAME);
+	printf("         %s --from '%%Y-%%m-%%d %%H:%%M:%%S.%%N' 1528799349866429541\n", PROG_NAME);
 
 	printf("\n");
 	printf("Usage: unixtime [OPTION]\n");
@@ -627,10 +653,11 @@ void help()
 	printf("    %%M     minute (00..59)\n");
 	printf("    %%S     second (00..60)\n");
 	printf("    %%s     microsecond (0..999999)\n");
+	printf("    %%N     nanosecond  (0..999999999)\n");
 
 	printf("When VALUE is - or --, read standard input.\n");
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // general function
 int main(int argc, char *argv[])
 {
@@ -799,8 +826,7 @@ int main(int argc, char *argv[])
 	{
 		const char *value = global::value.c_str();
 		int rc;
-		time_t time;
-		int64_t time_ms;
+		uint64_t time;
 		for (;;)
 		{
 			if (global::flag_stdin == true)
@@ -810,21 +836,13 @@ int main(int argc, char *argv[])
 				value = global::line_buf;
 			}
 
-			time_ms = -1;
-			int rc = unixtime_encode(global::format.c_str(), value, &time, &time_ms);
+			int rc = unixtime_encode(global::format.c_str(), value, &time);
 			if (rc == -1)
 			{
 				return 1;
 			}
 
-			if (time_ms == -1)
-			{
-				printf("%lu\n", time);
-			}
-			else
-			{
-				printf("%ld\n", time_ms);
-			}
+			printf("%lu\n", time);
 
 			if (global::flag_stdin == false) break;
 		}
@@ -837,4 +855,4 @@ int main(int argc, char *argv[])
 
 	return 1;
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
